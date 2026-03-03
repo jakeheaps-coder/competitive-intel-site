@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domo — Competitive Intelligence Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --domo-blue: #99CCEE;
+      --domo-blue-dark: #7BB8E0;
+      --neutral-50: #F1F6FA;
+      --neutral-100: #DCE4EA;
+      --neutral-200: #B7C1CB;
+      --neutral-600: #68737F;
+      --neutral-900: #3F454D;
+      --accent-orange: #FF9922;
+      --accent-orange-hover: #E8891F;
+      --accent-purple: #776CB0;
+      --accent-pink: #C179BD;
+      --accent-mint: #ADD4C1;
+      --font-primary: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --shadow-sm: 0 1px 3px rgba(63,69,77,0.08), 0 1px 2px rgba(63,69,77,0.06);
+      --shadow-md: 0 4px 12px rgba(63,69,77,0.1), 0 2px 4px rgba(63,69,77,0.06);
+      --shadow-lg: 0 8px 20px rgba(63,69,77,0.08), 0 4px 8px rgba(63,69,77,0.04);
+      --shadow-blue-glow: 0 4px 20px rgba(153, 204, 238, 0.3);
+      --shadow-orange-glow: 0 4px 20px rgba(255, 153, 34, 0.3);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --ease-smooth: cubic-bezier(0.83, 0, 0.17, 1);
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-primary);
+      color: var(--neutral-900);
+      background: #FFFFFF;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+    h2 { font-size: clamp(1.5rem, 3.5vw, 2.5rem); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
+    h3 { font-size: clamp(1.125rem, 2.5vw, 1.5rem); font-weight: 700; line-height: 1.3; }
+    h4 { font-size: 1.125rem; font-weight: 600; line-height: 1.4; }
+    p { font-size: clamp(0.9375rem, 1.5vw, 1.0625rem); color: var(--neutral-600); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    .section-label {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--domo-blue); margin-bottom: 0.75rem;
+    }
+    .section-label::before { content: ''; display: block; width: 24px; height: 2px; background: var(--domo-blue); border-radius: 1px; }
+
+    /* Animations */
+    @keyframes domoFadeInUp { from { opacity: 0; transform: translateY(1.5rem); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes domoFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes domoPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.85; } }
+    @keyframes heroFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    .domo-animate { opacity: 0; transform: translateY(1.5rem); transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo); }
+    .domo-animate.visible { opacity: 1; transform: translateY(0); }
+    .domo-stagger > .domo-animate:nth-child(1) { transition-delay: 0.05s; }
+    .domo-stagger > .domo-animate:nth-child(2) { transition-delay: 0.1s; }
+    .domo-stagger > .domo-animate:nth-child(3) { transition-delay: 0.15s; }
+    .domo-stagger > .domo-animate:nth-child(4) { transition-delay: 0.2s; }
+    .domo-stagger > .domo-animate:nth-child(5) { transition-delay: 0.25s; }
+    .domo-stagger > .domo-animate:nth-child(6) { transition-delay: 0.3s; }
+
+    /* Nav */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--neutral-100); transition: box-shadow 0.3s var(--ease-smooth); }
+    nav.scrolled { box-shadow: var(--shadow-md); }
+    nav .container { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-logo { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-logo svg { width: 36px; height: 36px; }
+    .nav-logo span { font-weight: 700; font-size: 0.9375rem; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { text-decoration: none; font-size: 0.875rem; font-weight: 600; color: var(--neutral-600); transition: color 0.3s; }
+    .nav-links a:hover { color: var(--neutral-900); }
+    .nav-cta { padding: 0.5rem 1.25rem; background: var(--accent-orange); color: white !important; border: none; border-radius: var(--radius-md); font-family: var(--font-primary); font-weight: 600; font-size: 0.875rem; cursor: pointer; text-decoration: none; transition: all 0.3s var(--ease-smooth); }
+    .nav-cta:hover { background: var(--accent-orange-hover); box-shadow: var(--shadow-orange-glow); }
+    .nav-mobile-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; }
+    .nav-mobile-toggle svg { width: 24px; height: 24px; stroke: var(--neutral-900); }
+
+    /* Hero */
+    .hero { padding: 8rem 0 5rem; background: linear-gradient(180deg, #FFFFFF 0%, var(--neutral-50) 100%); position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: -200px; right: -200px; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(153,204,238,0.12) 0%, transparent 70%); pointer-events: none; }
+    .hero .container { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; }
+    .hero-content { max-width: 560px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; background: rgba(153,204,238,0.15); border: 1px solid rgba(153,204,238,0.3); border-radius: 100px; font-size: 0.75rem; font-weight: 600; color: var(--domo-blue-dark); margin-bottom: 1.5rem; animation: domoFadeIn 0.6s var(--ease-out-expo) 0.1s both; }
+    .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-mint); animation: domoPulse 2s ease-in-out infinite; }
+    .hero h1 { margin-bottom: 1.25rem; animation: domoFadeInUp 0.6s var(--ease-out-expo) 0.2s both; }
+    .hero h1 span { color: var(--domo-blue); }
+    .hero-subtitle { font-size: clamp(1rem, 2vw, 1.1875rem); font-weight: 300; color: var(--neutral-600); margin-bottom: 2rem; max-width: 480px; animation: domoFadeInUp 0.6s var(--ease-out-expo) 0.3s both; }
+    .hero-actions { display: flex; gap: 1rem; animation: domoFadeInUp 0.6s var(--ease-out-expo) 0.4s both; }
+    .btn-primary { padding: 0.875rem 2rem; background: var(--accent-orange); color: white; border: none; border-radius: var(--radius-md); font-family: var(--font-primary); font-weight: 600; font-size: 0.9375rem; cursor: pointer; text-decoration: none; transition: all 0.3s var(--ease-smooth); display: inline-flex; align-items: center; gap: 0.5rem; }
+    .btn-primary:hover { background: var(--accent-orange-hover); transform: translateY(-2px); box-shadow: var(--shadow-orange-glow); }
+    .btn-secondary { padding: 0.875rem 2rem; background: transparent; color: var(--neutral-900); border: 1.5px solid var(--neutral-200); border-radius: var(--radius-md); font-family: var(--font-primary); font-weight: 600; font-size: 0.9375rem; cursor: pointer; text-decoration: none; transition: all 0.3s var(--ease-smooth); }
+    .btn-secondary:hover { border-color: var(--domo-blue); color: var(--domo-blue); }
+
+    .hero-visual { position: relative; animation: domoFadeIn 0.8s var(--ease-out-expo) 0.5s both; }
+    .hero-diagram { background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 2rem; }
+    .hero-diagram-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--neutral-200); margin-bottom: 1.25rem; }
+    .diagram-nodes { display: flex; flex-direction: column; gap: 0.875rem; }
+    .diagram-node { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-100); transition: all 0.3s; font-size: 0.8125rem; font-weight: 600; }
+    .diagram-node:hover { border-color: rgba(153,204,238,0.4); box-shadow: var(--shadow-sm); }
+    .diagram-node .icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .diagram-node .icon svg { width: 16px; height: 16px; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .node-blue .icon { background: rgba(153,204,238,0.15); }
+    .node-blue .icon svg { stroke: var(--domo-blue); }
+    .node-orange .icon { background: rgba(255,153,34,0.12); }
+    .node-orange .icon svg { stroke: var(--accent-orange); }
+    .node-purple .icon { background: rgba(119,108,176,0.12); }
+    .node-purple .icon svg { stroke: var(--accent-purple); }
+    .node-mint .icon { background: rgba(173,212,193,0.2); }
+    .node-mint .icon svg { stroke: #6BAF8D; }
+    .diagram-node .meta { font-size: 0.6875rem; font-weight: 400; color: var(--neutral-200); margin-left: auto; white-space: nowrap; }
+    .diagram-connector { display: flex; align-items: center; justify-content: center; height: 20px; position: relative; }
+    .diagram-connector::before { content: ''; position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: linear-gradient(to bottom, var(--neutral-100), var(--domo-blue), var(--neutral-100)); }
+    .diagram-connector svg { position: relative; z-index: 1; width: 14px; height: 14px; fill: var(--domo-blue); }
+    .hero-float-card { position: absolute; background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-md); box-shadow: var(--shadow-md); padding: 0.625rem 0.875rem; font-size: 0.75rem; font-weight: 600; animation: heroFloat 4s ease-in-out infinite; white-space: nowrap; }
+    .hero-float-card.card-1 { top: -12px; right: -16px; color: #C0392B; }
+    .hero-float-card.card-2 { bottom: 40px; left: -20px; animation-delay: 1.3s; color: #27AE60; }
+    .hero-float-card .float-icon { display: inline-flex; width: 18px; height: 18px; border-radius: 50%; align-items: center; justify-content: center; font-size: 0.625rem; margin-right: 0.375rem; vertical-align: middle; }
+    .hero-float-card.card-1 .float-icon { background: rgba(192,57,43,0.1); }
+    .hero-float-card.card-2 .float-icon { background: rgba(39,174,96,0.1); }
+
+    /* Stats bar */
+    .stats-bar { padding: 3rem 0; background: white; border-bottom: 1px solid var(--neutral-100); }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: clamp(2rem, 4vw, 3rem); font-weight: 300; color: var(--domo-blue); line-height: 1; margin-bottom: 0.375rem; }
+    .stat-label { font-size: 0.8125rem; font-weight: 600; color: var(--neutral-600); }
+
+    /* Section */
+    .section { padding: 5rem 0; }
+    .section-alt { background: var(--neutral-50); }
+    .section-header { text-align: center; max-width: 640px; margin: 0 auto 3.5rem; }
+    .section-header p { margin-top: 0.75rem; }
+
+    /* Pipeline */
+    .pipeline { display: flex; flex-direction: column; position: relative; max-width: 800px; margin: 0 auto; }
+    .pipeline::before { content: ''; position: absolute; top: 40px; bottom: 40px; left: 39px; width: 2px; background: linear-gradient(to bottom, var(--domo-blue), var(--accent-orange), var(--accent-purple), var(--accent-mint)); border-radius: 1px; }
+    .pipeline-step { display: flex; gap: 1.5rem; padding: 1.5rem 0; position: relative; }
+    .pipeline-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; border: 3px solid white; box-shadow: var(--shadow-md); }
+    .pipeline-icon svg { width: 28px; height: 28px; stroke: white; fill: none; }
+    .pipeline-icon.icon-blue { background: var(--domo-blue); }
+    .pipeline-icon.icon-orange { background: var(--accent-orange); }
+    .pipeline-icon.icon-purple { background: var(--accent-purple); }
+    .pipeline-icon.icon-mint { background: var(--accent-mint); }
+    .pipeline-body { flex: 1; padding-top: 0.5rem; }
+    .pipeline-body h3 { margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .pipeline-body h3 .step-num { font-size: 0.6875rem; font-weight: 700; color: white; background: var(--neutral-200); border-radius: 100px; padding: 0.125rem 0.5rem; }
+    .pipeline-body p { margin-bottom: 1rem; }
+    .pipeline-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+    .pipeline-tag { padding: 0.25rem 0.625rem; font-size: 0.6875rem; font-weight: 600; border-radius: 100px; background: rgba(153,204,238,0.12); color: var(--domo-blue-dark); }
+    .pipeline-tag.tag-orange { background: rgba(255,153,34,0.1); color: var(--accent-orange); }
+    .pipeline-tag.tag-purple { background: rgba(119,108,176,0.1); color: var(--accent-purple); }
+    .pipeline-tag.tag-mint { background: rgba(173,212,193,0.15); color: #4D9A6E; }
+
+    /* ── INFO CARDS (What We Know) ── */
+    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .info-card { padding: 2rem; background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); transition: all 0.3s var(--ease-smooth); position: relative; overflow: hidden; }
+    .info-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); border-color: rgba(153,204,238,0.3); }
+    .info-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .info-card-icon { width: 48px; height: 48px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; }
+    .info-card-icon svg { width: 22px; height: 22px; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .info-card h3 { margin-bottom: 0.5rem; font-size: 1.1875rem; }
+    .info-card p { font-size: 0.875rem; margin-bottom: 1rem; }
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .info-list li { font-size: 0.8125rem; color: var(--neutral-600); display: flex; align-items: flex-start; gap: 0.5rem; line-height: 1.5; }
+    .info-list li .bullet { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 0.45rem; }
+    .info-stat { display: flex; align-items: baseline; gap: 0.375rem; margin-bottom: 0.875rem; }
+    .info-stat .big { font-size: 2rem; font-weight: 300; line-height: 1; }
+    .info-stat .unit { font-size: 0.8125rem; font-weight: 600; color: var(--neutral-600); }
+
+    /* ── OUTPUT SHOWCASE ── */
+    .output-showcase { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .output-big { padding: 2.5rem; background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); transition: all 0.3s var(--ease-smooth); }
+    .output-big:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .output-big-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .output-big-icon { width: 52px; height: 52px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .output-big-icon svg { width: 24px; height: 24px; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .output-big h3 { font-size: 1.25rem; margin-bottom: 0.125rem; }
+    .output-big .output-desc { font-size: 0.8125rem; color: var(--neutral-200); font-weight: 600; }
+    .output-big p { font-size: 0.9375rem; margin-bottom: 1.25rem; }
+    .output-sections { display: flex; flex-direction: column; gap: 0.625rem; }
+    .output-section-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border: 1px solid var(--neutral-100); border-radius: var(--radius-md); font-size: 0.8125rem; font-weight: 600; color: var(--neutral-900); transition: all 0.2s; }
+    .output-section-item:hover { border-color: rgba(153,204,238,0.4); background: rgba(153,204,238,0.04); }
+    .output-section-item .os-icon { width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; }
+    .output-section-item .os-detail { font-weight: 400; color: var(--neutral-200); margin-left: auto; font-size: 0.6875rem; }
+
+    /* Email preview */
+    .email-preview { max-width: 600px; margin: 0 auto; background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+    .email-chrome { background: var(--neutral-50); padding: 0.75rem 1rem; border-bottom: 1px solid var(--neutral-100); display: flex; align-items: center; gap: 0.5rem; }
+    .email-chrome .dot-row { display: flex; gap: 0.375rem; }
+    .email-chrome .dot-row span { width: 10px; height: 10px; border-radius: 50%; background: var(--neutral-200); }
+    .email-chrome .email-subject { font-size: 0.75rem; font-weight: 600; color: var(--neutral-600); margin-left: 0.75rem; }
+    .email-header { background: linear-gradient(180deg, var(--domo-blue) 0%, var(--domo-blue-dark) 100%); padding: 2rem 1.5rem; color: white; text-align: center; }
+    .email-header h3 { font-weight: 700; font-size: 1.125rem; color: white; margin-bottom: 0.25rem; }
+    .email-header p { font-size: 0.75rem; color: rgba(255,255,255,0.8); }
+    .email-body { padding: 1.5rem; }
+    .email-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .email-stat { text-align: center; padding: 0.75rem; background: var(--neutral-50); border-radius: var(--radius-md); }
+    .email-stat .num { font-size: 1.5rem; font-weight: 300; color: var(--domo-blue); line-height: 1; }
+    .email-stat .label { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--neutral-200); margin-top: 0.25rem; }
+    .email-finding { padding: 0.75rem; border-left: 3px solid; margin-bottom: 0.75rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--neutral-50); }
+    .email-finding.threat { border-color: #E74C3C; }
+    .email-finding.opportunity { border-color: #27AE60; }
+    .email-finding.neutral { border-color: var(--neutral-200); }
+    .email-finding h4 { font-size: 0.8125rem; margin-bottom: 0.25rem; }
+    .email-finding p { font-size: 0.6875rem; color: var(--neutral-600); line-height: 1.5; }
+    .email-finding .sentiment-badge { display: inline-block; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.125rem 0.5rem; border-radius: 100px; margin-top: 0.375rem; }
+    .email-finding.threat .sentiment-badge { background: rgba(231,76,60,0.1); color: #E74C3C; }
+    .email-finding.opportunity .sentiment-badge { background: rgba(39,174,96,0.1); color: #27AE60; }
+    .email-finding.neutral .sentiment-badge { background: rgba(183,193,203,0.2); color: var(--neutral-600); }
+
+    /* Competitors */
+    .pillar-tabs { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2.5rem; flex-wrap: wrap; }
+    .pillar-tab { padding: 0.5rem 1.25rem; border: 1.5px solid var(--neutral-100); border-radius: 100px; font-family: var(--font-primary); font-size: 0.8125rem; font-weight: 600; color: var(--neutral-600); background: white; cursor: pointer; transition: all 0.3s; }
+    .pillar-tab:hover { border-color: var(--domo-blue); color: var(--domo-blue); }
+    .pillar-tab.active { background: var(--domo-blue); border-color: var(--domo-blue); color: white; }
+    .competitors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .competitor-card { padding: 1.25rem; background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); transition: all 0.3s; text-align: center; }
+    .competitor-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(153,204,238,0.3); }
+    .competitor-card .comp-name { font-weight: 700; font-size: 0.9375rem; margin-bottom: 0.25rem; }
+    .competitor-card .comp-pillar { font-size: 0.6875rem; font-weight: 600; color: var(--neutral-200); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Architecture */
+    .arch-diagram { max-width: 900px; margin: 0 auto; background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 2.5rem; position: relative; overflow: hidden; }
+    .arch-row { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .arch-row:last-child { margin-bottom: 0; }
+    .arch-box { padding: 0.875rem 1.25rem; border-radius: var(--radius-md); font-size: 0.8125rem; font-weight: 600; text-align: center; border: 1.5px solid; min-width: 140px; transition: all 0.3s; }
+    .arch-box:hover { transform: scale(1.03); }
+    .arch-box.ab-blue { background: rgba(153,204,238,0.1); border-color: rgba(153,204,238,0.4); color: var(--domo-blue-dark); }
+    .arch-box.ab-orange { background: rgba(255,153,34,0.08); border-color: rgba(255,153,34,0.3); color: var(--accent-orange); }
+    .arch-box.ab-purple { background: rgba(119,108,176,0.08); border-color: rgba(119,108,176,0.3); color: var(--accent-purple); }
+    .arch-box.ab-mint { background: rgba(173,212,193,0.12); border-color: rgba(173,212,193,0.4); color: #4D9A6E; }
+    .arch-box.ab-dark { background: var(--neutral-900); border-color: var(--neutral-900); color: white; }
+    .arch-box small { display: block; font-size: 0.625rem; font-weight: 400; opacity: 0.7; margin-top: 0.125rem; }
+    .arch-arrow { display: flex; justify-content: center; margin: 0.5rem 0; }
+    .arch-arrow svg { width: 20px; height: 20px; stroke: var(--neutral-200); fill: none; stroke-width: 2; stroke-linecap: round; }
+    .arch-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.5rem 0; }
+    .arch-divider::before, .arch-divider::after { content: ''; flex: 1; height: 1px; background: var(--neutral-100); }
+    .arch-divider span { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--neutral-200); white-space: nowrap; }
+
+    /* Tech Stack */
+    .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .tech-card { padding: 1.5rem; background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 1rem; transition: all 0.3s; }
+    .tech-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .tech-card-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tech-card-icon svg { width: 20px; height: 20px; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .tech-card h4 { font-size: 0.9375rem; margin-bottom: 0.125rem; }
+    .tech-card p { font-size: 0.75rem; margin: 0; }
+
+    /* CTA */
+    .cta-section { padding: 5rem 0; background: linear-gradient(180deg, var(--domo-blue) 0%, var(--domo-blue-dark) 100%); text-align: center; color: white; position: relative; overflow: hidden; }
+    .cta-section::before { content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; border-radius: 50%; background: rgba(255,255,255,0.05); pointer-events: none; }
+    .cta-section h2 { color: white; margin-bottom: 0.75rem; }
+    .cta-section p { color: rgba(255,255,255,0.8); max-width: 500px; margin: 0 auto 2rem; font-size: 1.0625rem; }
+
+    /* Footer */
+    footer { background: var(--neutral-900); padding: 3rem 0; color: rgba(255,255,255,0.5); }
+    footer .container { display: flex; align-items: center; justify-content: space-between; }
+    footer .footer-left { display: flex; align-items: center; gap: 0.75rem; }
+    footer .footer-left svg { width: 48px; height: 48px; }
+    footer .footer-left span { font-size: 0.8125rem; }
+    footer .footer-right { font-size: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    footer .gemini-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; background: rgba(255,255,255,0.08); border-radius: 100px; font-size: 0.6875rem; font-weight: 600; }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .hero .container { grid-template-columns: 1fr; gap: 3rem; }
+      .hero-visual { max-width: 500px; margin: 0 auto; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+      .info-grid, .output-showcase { grid-template-columns: 1fr; }
+      .arch-box { min-width: 110px; font-size: 0.75rem; padding: 0.625rem 0.875rem; }
+    }
+    @media (max-width: 768px) {
+      .hero { padding: 6rem 0 3rem; }
+      .nav-links { display: none; }
+      .nav-mobile-toggle { display: block; }
+      .pipeline::before { left: 29px; }
+      .pipeline-icon { width: 60px; height: 60px; }
+      .pipeline-icon svg { width: 22px; height: 22px; }
+      .competitors-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-float-card { display: none; }
+      footer .container { flex-direction: column; gap: 1rem; text-align: center; }
+      .hero-actions { flex-direction: column; }
+      .email-stat-row { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    *:focus-visible { outline: 2px solid var(--domo-blue); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav id="nav">
+  <div class="container">
+    <div class="nav-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path fill="#99CCEE" d="M150.5,328.6c12.4,13.8,21.2,30.9,25,49.8,9.9-48.8,53-85.5,104.7-85.5s94.8,36.8,104.7,85.6v-85.6l106.8,106.8,107.1-106.8v85.6c9.9-48.8,53-85.6,104.7-85.6s79.2,24.8,96.4,60.7V0H0v292.9h70.8c31.7,0,60.1,13.8,79.7,35.7Z"/><path fill="#99CCEE" d="M703.6,506.6c-51.7,0-94.8-36.8-104.7-85.6v85.6h-36v-127.8l-71.1,71.4-71.4-71.4v127.8h-35.4v-85.6c-9.9,48.8-53,85.6-104.7,85.6s-94.8-36.7-104.7-85.5c-3.8,18.9-12.6,36-25,49.8-19.6,21.9-48,35.7-79.7,35.7H0v293.4h800v-354.2c-17.2,35.9-53.9,60.7-96.4,60.7h0Z"/><path fill="#99CCEE" d="M280.2,471c39.4,0,71.3-31.9,71.3-71.3s-31.9-71.3-71.3-71.3-71.3,31.9-71.3,71.3,31.9,71.3,71.3,71.3Z"/><path fill="#99CCEE" d="M142.1,399.7c0-37.8-29.4-68.7-66.6-71.1h-40.1v142.2h40.1c37.2-2.4,66.6-33.3,66.6-71.1h0Z"/><path fill="#99CCEE" d="M703.6,471c39.4,0,71.3-31.9,71.3-71.3s-31.9-71.3-71.3-71.3-71.3,31.9-71.3,71.3,31.9,71.3,71.3,71.3Z"/><path fill="#FFF" d="M150.5,470.8c12.4-13.8,21.2-30.9,25-49.8,9.9,48.8,53,85.5,104.7,85.5s94.8-36.8,104.7-85.6v85.6h35.4v-127.8l71.4,71.4,71.1-71.4v127.8h36v-85.6c9.9,48.8,53,85.6,104.7,85.6s79.2-24.8,96.4-60.7v-92.2c-17.2-35.9-53.9-60.7-96.4-60.7s-94.8,36.8-104.7,85.6v-85.6l-107.1,106.8-106.8-106.8v85.6c-9.9-48.8-53-85.6-104.7-85.6s-94.8,36.7-104.7,85.5c-3.8-18.9-12.6-36-25-49.8-19.6-21.9-48-35.7-79.7-35.7H0v213.7h70.8c31.7,0,60.1-13.8,79.7-35.7h0ZM703.6,328.5c39.4,0,71.3,31.9,71.3,71.3s-31.9,71.3-71.3,71.3-71.3-31.9-71.3-71.3,31.9-71.3,71.3-71.3ZM280.2,328.5c39.4,0,71.3,31.9,71.3,71.3s-31.9,71.3-71.3,71.3-71.3-31.9-71.3-71.3,31.9-71.3,71.3-71.3ZM35.4,328.6h40.1c37.2,2.4,66.6,33.3,66.6,71.1s-29.4,68.7-66.6,71.1h-40.1v-142.2h0Z"/></svg>
+      <span>Competitive Intel Agent</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#intelligence">Intelligence</a></li>
+      <li><a href="#outputs">Outputs</a></li>
+      <li><a href="#competitors">Competitors</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+    </ul>
+    <a href="#cta" class="nav-cta">Try the Agent</a>
+    <button class="nav-mobile-toggle" aria-label="Toggle menu">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ════ HERO ════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge"><span class="dot"></span> Running daily at 7 AM MST</div>
+      <h1>AI-Powered <span>Competitive Intelligence</span> for Domo</h1>
+      <p class="hero-subtitle">An automated system that researches 18 competitors daily, tracks M&A signals, captures misconceptions, and delivers actionable insights — powered by Gemini AI and validated by our Knowledge Graph.</p>
+      <div class="hero-actions">
+        <a href="#how-it-works" class="btn-primary">See How It Works <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+        <a href="#outputs" class="btn-secondary">View Outputs</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-diagram">
+        <div class="hero-diagram-label">Daily Intelligence Pipeline</div>
+        <div class="diagram-nodes">
+          <div class="diagram-node node-blue">
+            <div class="icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <span>Google Search Grounding</span><span class="meta">111 queries</span>
+          </div>
+          <div class="diagram-connector"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div class="diagram-node node-orange">
+            <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+            <span>Gemini 2.5 Flash Analysis</span><span class="meta">Structured JSON</span>
+          </div>
+          <div class="diagram-connector"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div class="diagram-node node-purple">
+            <div class="icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+            <span>Domo AppDB Storage</span><span class="meta">~100 docs/day</span>
+          </div>
+          <div class="diagram-connector"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div class="diagram-node node-mint">
+            <div class="icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+            <span>Email Digest + Agent</span><span class="meta">7 AM MST</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-float-card card-1"><span class="float-icon">!</span> Threat: Tableau AI launch</div>
+      <div class="hero-float-card card-2"><span class="float-icon">+</span> Opp: Domo wins on speed</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ STATS ════ -->
+<section class="stats-bar">
+  <div class="container">
+    <div class="stats-grid domo-stagger">
+      <div class="stat-item domo-animate"><div class="stat-value" data-value="18">0</div><div class="stat-label">Competitors Tracked</div></div>
+      <div class="stat-item domo-animate"><div class="stat-value" data-value="111">0</div><div class="stat-label">Daily Search Queries</div></div>
+      <div class="stat-item domo-animate"><div class="stat-value" data-value="24">0</div><div class="stat-label">Agent Tools</div></div>
+      <div class="stat-item domo-animate"><div class="stat-value" data-value="5" data-suffix="+">0</div><div class="stat-label">Product Pillars</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ HOW IT WORKS ════ -->
+<section id="how-it-works" class="section section-alt">
+  <div class="container">
+    <div class="section-header domo-animate">
+      <div class="section-label">How It Works</div>
+      <h2>The Daily Intelligence Pipeline</h2>
+      <p>Every morning at 7 AM MST, a Cloud Run job kicks off the full competitive research cycle — from live web search to structured storage to stakeholder delivery.</p>
+    </div>
+    <div class="pipeline">
+      <div class="pipeline-step domo-animate">
+        <div class="pipeline-icon icon-blue"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+        <div class="pipeline-body">
+          <h3><span class="step-num">01</span> Load Competitor Dataset</h3>
+          <p>Queries the <strong>competitors_to_watch</strong> dataset from Domo via Code Engine — 18 unique competitors mapped across 5 product pillars (Visualization, Integration, Agent Catalyst, Apps, Embed).</p>
+          <div class="pipeline-tags"><span class="pipeline-tag">Domo Code Engine</span><span class="pipeline-tag">REST API</span><span class="pipeline-tag">SQL Query</span></div>
+        </div>
+      </div>
+      <div class="pipeline-step domo-animate">
+        <div class="pipeline-icon icon-orange"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div class="pipeline-body">
+          <h3><span class="step-num">02</span> Research Each Competitor</h3>
+          <p>For each competitor, runs <strong>3 Gemini searches</strong> with Google Search grounding: recent news & product launches, head-to-head Domo vs. comparison, and live pricing/features page. Executes in parallel with 4 workers.</p>
+          <div class="pipeline-tags"><span class="pipeline-tag tag-orange">Gemini 2.5 Flash</span><span class="pipeline-tag tag-orange">Google Search</span><span class="pipeline-tag">54 Queries</span><span class="pipeline-tag">4 Workers</span></div>
+        </div>
+      </div>
+      <div class="pipeline-step domo-animate">
+        <div class="pipeline-icon icon-purple"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        <div class="pipeline-body">
+          <h3><span class="step-num">03</span> Track Misconceptions & M&A Signals</h3>
+          <p>Runs <strong>9 targeted queries</strong> to find false/outdated Domo claims on Reddit, G2, and AI chatbots. Plus <strong>30 M&A queries</strong> scanning Bloomberg, Reuters, WSJ, Seeking Alpha, StockTwits, Reddit, and X for acquisition signals.</p>
+          <div class="pipeline-tags"><span class="pipeline-tag tag-purple">9 Misconception Queries</span><span class="pipeline-tag tag-purple">30 M&A Queries</span><span class="pipeline-tag">Deduplication</span></div>
+        </div>
+      </div>
+      <div class="pipeline-step domo-animate">
+        <div class="pipeline-icon icon-mint"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+        <div class="pipeline-body">
+          <h3><span class="step-num">04</span> Store, Score & Deliver</h3>
+          <p>Writes ~100 structured documents to Domo AppDB (per-competitor collections). Every finding gets a <strong>sentiment score</strong> (threat/opportunity/neutral) and <strong>confidence level</strong>. Generates an HTML email digest grouped by pillar and delivers to stakeholders.</p>
+          <div class="pipeline-tags"><span class="pipeline-tag tag-mint">20 AppDB Collections</span><span class="pipeline-tag tag-mint">HTML Email Digest</span><span class="pipeline-tag">Sentiment Scoring</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ INTELLIGENCE — What We Know ════ -->
+<section id="intelligence" class="section">
+  <div class="container">
+    <div class="section-header domo-animate">
+      <div class="section-label">The Intelligence Layer</div>
+      <h2>What Information We Have</h2>
+      <p>Three categories of intelligence, all continuously updated and stored in searchable databases — ready for instant retrieval by the agent or your team.</p>
+    </div>
+    <div class="info-grid domo-stagger">
+
+      <!-- Competitor Intel -->
+      <div class="info-card domo-animate">
+        <div class="info-card-accent" style="background: linear-gradient(90deg, var(--domo-blue), var(--domo-blue-dark));"></div>
+        <div class="info-card-icon" style="background: rgba(153,204,238,0.15);">
+          <svg viewBox="0 0 24 24" stroke="var(--domo-blue)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3>Competitor Intelligence</h3>
+        <div class="info-stat"><span class="big" style="color: var(--domo-blue);" data-value="18">0</span><span class="unit">competitors &middot; 5 pillars</span></div>
+        <p>Deep, per-competitor databases refreshed daily with structured findings from across the web.</p>
+        <ul class="info-list">
+          <li><span class="bullet" style="background: var(--domo-blue);"></span> Product launches, feature updates & roadmap signals</li>
+          <li><span class="bullet" style="background: var(--domo-blue);"></span> Pricing changes and packaging model shifts</li>
+          <li><span class="bullet" style="background: var(--domo-blue);"></span> Funding rounds, partnerships & leadership changes</li>
+          <li><span class="bullet" style="background: var(--domo-blue);"></span> Head-to-head Domo vs. comparisons from G2, Reddit, analysts</li>
+          <li><span class="bullet" style="background: var(--domo-blue);"></span> Sentiment scoring: threat, opportunity, or neutral</li>
+          <li><span class="bullet" style="background: var(--domo-blue);"></span> Confidence levels for every finding (high/medium/low)</li>
+        </ul>
+      </div>
+
+      <!-- M&A Signals -->
+      <div class="info-card domo-animate">
+        <div class="info-card-accent" style="background: linear-gradient(90deg, var(--accent-orange), var(--accent-orange-hover));"></div>
+        <div class="info-card-icon" style="background: rgba(255,153,34,0.12);">
+          <svg viewBox="0 0 24 24" stroke="var(--accent-orange)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>M&A Signal Tracking</h3>
+        <div class="info-stat"><span class="big" style="color: var(--accent-orange);" data-value="30">0</span><span class="unit">daily search queries</span></div>
+        <p>Continuous monitoring across financial news, social media, and market intelligence for acquisition and strategic signals.</p>
+        <ul class="info-list">
+          <li><span class="bullet" style="background: var(--accent-orange);"></span> Acquisition rumors & "strategic alternatives" filings</li>
+          <li><span class="bullet" style="background: var(--accent-orange);"></span> Investment activity & private equity interest</li>
+          <li><span class="bullet" style="background: var(--accent-orange);"></span> Bloomberg, Reuters, WSJ & Seeking Alpha coverage</li>
+          <li><span class="bullet" style="background: var(--accent-orange);"></span> Reddit, StockTwits & X social sentiment</li>
+          <li><span class="bullet" style="background: var(--accent-orange);"></span> Signal types: acquisition_rumor, investment, strategic_alternative</li>
+          <li><span class="bullet" style="background: var(--accent-orange);"></span> Timestamped for historical trend analysis</li>
+        </ul>
+      </div>
+
+      <!-- Misconceptions -->
+      <div class="info-card domo-animate">
+        <div class="info-card-accent" style="background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink));"></div>
+        <div class="info-card-icon" style="background: rgba(119,108,176,0.12);">
+          <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3>Domo Misconceptions</h3>
+        <div class="info-stat"><span class="big" style="color: var(--accent-purple);" data-value="9">0</span><span class="unit">daily myth-hunting queries</span></div>
+        <p>Systematically finds and corrects false or outdated claims about Domo — then validates the truth via the Knowledge Graph API.</p>
+        <ul class="info-list">
+          <li><span class="bullet" style="background: var(--accent-purple);"></span> False claims from Reddit, G2, AI chatbots & blogs</li>
+          <li><span class="bullet" style="background: var(--accent-purple);"></span> "Domo charges per dashboard" — busted with KG facts</li>
+          <li><span class="bullet" style="background: var(--accent-purple);"></span> "Domo isn't cloud native" — corrected with architecture truth</li>
+          <li><span class="bullet" style="background: var(--accent-purple);"></span> Each myth paired with verified truth from Knowledge Graph</li>
+          <li><span class="bullet" style="background: var(--accent-purple);"></span> Severity scoring: high, medium, low impact</li>
+          <li><span class="bullet" style="background: var(--accent-purple);"></span> Source attribution for every claim found</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ OUTPUTS ════ -->
+<section id="outputs" class="section section-alt">
+  <div class="container">
+    <div class="section-header domo-animate">
+      <div class="section-label">What You Can Build</div>
+      <h2>Actionable Outputs</h2>
+      <p>Ask the agent to generate any of these deliverables on demand — backed by live research, stored intelligence, and Knowledge Graph validation.</p>
+    </div>
+
+    <div class="output-showcase domo-stagger">
+      <!-- Battle Cards -->
+      <div class="output-big domo-animate">
+        <div class="output-big-header">
+          <div class="output-big-icon" style="background: rgba(153,204,238,0.15);">
+            <svg viewBox="0 0 24 24" stroke="var(--domo-blue)"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div><h3>Battle Cards</h3><div class="output-desc">Sales-ready competitive analysis</div></div>
+        </div>
+        <p>Structured, opinionated competitive briefs designed for sales conversations. Generated in seconds by combining AppDB intelligence, live search, and KG-validated Domo claims.</p>
+        <div class="output-sections">
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(231,76,60,0.1); color: #E74C3C;">1</div> "What You Might Hear" — common objections<div class="os-detail">Objection handling</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(153,204,238,0.15); color: var(--domo-blue);">2</div> Them vs. Us comparison table<div class="os-detail">Feature matrix</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(39,174,96,0.1); color: #27AE60;">3</div> Win themes & loss themes<div class="os-detail">Pattern analysis</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(255,153,34,0.1); color: var(--accent-orange);">4</div> Ready-to-use talk track<div class="os-detail">Sales enablement</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(119,108,176,0.1); color: var(--accent-purple);">5</div> KG-validated proof points<div class="os-detail">Source: Knowledge Graph</div></div>
+        </div>
+      </div>
+
+      <!-- Myth-Busters -->
+      <div class="output-big domo-animate">
+        <div class="output-big-header">
+          <div class="output-big-icon" style="background: rgba(119,108,176,0.12);">
+            <svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div><h3>Myth-Busters</h3><div class="output-desc">Counter misconceptions with facts</div></div>
+        </div>
+        <p>When prospects or the market repeat outdated claims about Domo, the agent generates structured myth-buster documents — pairing every false claim with KG-verified truth.</p>
+        <div class="output-sections">
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(231,76,60,0.1); color: #E74C3C;">!</div> The false claim — what people are saying<div class="os-detail">Source identified</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(255,153,34,0.1); color: var(--accent-orange);">?</div> Why it exists — context and origin<div class="os-detail">Root cause</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(39,174,96,0.1); color: #27AE60;">&#10003;</div> The truth today — KG-validated facts<div class="os-detail">Knowledge Graph</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(153,204,238,0.15); color: var(--domo-blue);">*</div> Proof points and talk track<div class="os-detail">Ready to use</div></div>
+        </div>
+      </div>
+
+      <!-- Comparison Docs -->
+      <div class="output-big domo-animate">
+        <div class="output-big-header">
+          <div class="output-big-icon" style="background: rgba(255,153,34,0.12);">
+            <svg viewBox="0 0 24 24" stroke="var(--accent-orange)"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M21 3l-7 7"/><path d="M3 3l7 7"/><path d="M16 21h5v-5"/><path d="M8 21H3v-5"/><path d="M21 21l-7-7"/><path d="M3 21l7-7"/></svg>
+          </div>
+          <div><h3>Head-to-Head Comparisons</h3><div class="output-desc">Deep competitive analysis docs</div></div>
+        </div>
+        <p>Comprehensive "Domo vs. X" analysis documents combining live research with stored intelligence. Designed for deal strategy and competitive positioning.</p>
+        <div class="output-sections">
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(153,204,238,0.15); color: var(--domo-blue);">1</div> Executive summary<div class="os-detail">Key takeaways</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(255,153,34,0.1); color: var(--accent-orange);">2</div> Feature-by-feature comparison table<div class="os-detail">Detailed matrix</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(119,108,176,0.1); color: var(--accent-purple);">3</div> Pricing and packaging analysis<div class="os-detail">Live research</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(39,174,96,0.1); color: #27AE60;">4</div> Target market & deal strategy<div class="os-detail">Go-to-market</div></div>
+        </div>
+      </div>
+
+      <!-- Deal Prep -->
+      <div class="output-big domo-animate">
+        <div class="output-big-header">
+          <div class="output-big-icon" style="background: rgba(173,212,193,0.15);">
+            <svg viewBox="0 0 24 24" stroke="#6BAF8D"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div><h3>Deal Prep Briefs</h3><div class="output-desc">Quick intel for active opportunities</div></div>
+        </div>
+        <p>Fast competitive briefings for reps heading into deals. Combines the latest competitor intel with win/loss themes and a situational talk track — ready in under 30 seconds.</p>
+        <div class="output-sections">
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(153,204,238,0.15); color: var(--domo-blue);">1</div> Competitor profile & recent news<div class="os-detail">Last 7 days</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(255,153,34,0.1); color: var(--accent-orange);">2</div> Key differentiators & positioning<div class="os-detail">KG-validated</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(39,174,96,0.1); color: #27AE60;">3</div> Win/loss themes for this competitor<div class="os-detail">Pattern data</div></div>
+          <div class="output-section-item"><div class="os-icon" style="background: rgba(119,108,176,0.1); color: var(--accent-purple);">4</div> Situational talk track<div class="os-detail">Deal-specific</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email preview -->
+    <div style="margin-top: 4rem;">
+      <div class="section-header domo-animate">
+        <div class="section-label">Daily Delivery</div>
+        <h2>The Morning Email Digest</h2>
+        <p>Delivered automatically at 7 AM MST — a beautiful HTML report summarizing every finding, threat, and opportunity discovered overnight.</p>
+      </div>
+      <div class="email-preview domo-animate">
+        <div class="email-chrome">
+          <div class="dot-row"><span></span><span></span><span></span></div>
+          <span class="email-subject">Competitive Intel Digest — March 3, 2026</span>
+        </div>
+        <div class="email-header">
+          <h3>Competitive Intelligence Report</h3>
+          <p>18 competitors researched across 5 pillars</p>
+        </div>
+        <div class="email-body">
+          <div class="email-stat-row">
+            <div class="email-stat"><div class="num" data-value="87">0</div><div class="label">Findings</div></div>
+            <div class="email-stat"><div class="num" data-value="12">0</div><div class="label">Threats</div></div>
+            <div class="email-stat"><div class="num" data-value="8">0</div><div class="label">M&A Signals</div></div>
+          </div>
+          <div class="email-finding threat">
+            <h4>Tableau Launches AI-Powered Narratives Feature</h4>
+            <p>Tableau announced a new AI narrative generation feature that automatically creates data stories from dashboards, positioning directly against Domo's automated insights.</p>
+            <span class="sentiment-badge">Threat &middot; High Confidence</span>
+          </div>
+          <div class="email-finding opportunity">
+            <h4>Fivetran Customers Report Integration Fatigue</h4>
+            <p>G2 reviews show growing frustration with Fivetran's connector limitations and pricing model, creating an opening for Domo's unified integration approach.</p>
+            <span class="sentiment-badge">Opportunity &middot; Medium Confidence</span>
+          </div>
+          <div class="email-finding neutral">
+            <h4>Power BI Updates Copilot Features</h4>
+            <p>Microsoft expanded Power BI Copilot to include natural language querying across datasets, available to E5 license holders.</p>
+            <span class="sentiment-badge">Neutral &middot; High Confidence</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ COMPETITORS ════ -->
+<section id="competitors" class="section">
+  <div class="container">
+    <div class="section-header domo-animate">
+      <div class="section-label">Coverage</div>
+      <h2>18 Competitors Across 5 Pillars</h2>
+      <p>Organized by Domo product category — each competitor has its own AppDB collection with a growing database of structured, searchable intelligence.</p>
+    </div>
+    <div class="pillar-tabs domo-animate" id="pillarTabs">
+      <button class="pillar-tab active" data-pillar="all">All</button>
+      <button class="pillar-tab" data-pillar="visualization">Visualization</button>
+      <button class="pillar-tab" data-pillar="integration">Integration</button>
+      <button class="pillar-tab" data-pillar="agent">Agent Catalyst</button>
+      <button class="pillar-tab" data-pillar="apps">Apps</button>
+      <button class="pillar-tab" data-pillar="embed">Domo Embed</button>
+    </div>
+    <div class="competitors-grid domo-stagger" id="competitorsGrid"></div>
+  </div>
+</section>
+
+<!-- ════ ARCHITECTURE ════ -->
+<section id="architecture" class="section section-alt">
+  <div class="container">
+    <div class="section-header domo-animate">
+      <div class="section-label">Under the Hood</div>
+      <h2>System Architecture</h2>
+      <p>Two interconnected systems — an automated daily collector and a conversational agent — sharing a common data layer validated by the Knowledge Graph.</p>
+    </div>
+    <div class="arch-diagram domo-animate">
+      <div class="arch-divider"><span>Trigger</span></div>
+      <div class="arch-row"><div class="arch-box ab-dark">Cloud Scheduler<small>0 14 * * * (UTC)</small></div></div>
+      <div class="arch-arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+      <div class="arch-divider"><span>Daily Collector</span></div>
+      <div class="arch-row"><div class="arch-box ab-blue">Cloud Run Job<small>Python 3.11</small></div></div>
+      <div class="arch-arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+      <div class="arch-row">
+        <div class="arch-box ab-orange">Gemini 2.5 Flash<small>+ Google Search</small></div>
+        <div class="arch-box ab-blue">Domo Code Engine<small>Dataset Queries</small></div>
+      </div>
+      <div class="arch-arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+      <div class="arch-divider"><span>Data Layer</span></div>
+      <div class="arch-row">
+        <div class="arch-box ab-purple">Domo AppDB<small>20 Collections</small></div>
+        <div class="arch-box ab-mint">Knowledge Graph<small>Neo4j + Cloud Run</small></div>
+      </div>
+      <div class="arch-arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+      <div class="arch-divider"><span>Delivery</span></div>
+      <div class="arch-row">
+        <div class="arch-box ab-orange">HTML Email Digest<small>Domo Code Engine</small></div>
+        <div class="arch-box ab-blue">Conversational Agent<small>Gemini Enterprise</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TECH STACK ════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header domo-animate">
+      <div class="section-label">Built With</div>
+      <h2>Technology Stack</h2>
+    </div>
+    <div class="tech-grid domo-stagger">
+      <div class="tech-card domo-animate">
+        <div class="tech-card-icon" style="background: rgba(153,204,238,0.12);"><svg viewBox="0 0 24 24" stroke="var(--domo-blue)"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <div><h4>Gemini 2.5 Flash</h4><p>AI research + structured extraction</p></div>
+      </div>
+      <div class="tech-card domo-animate">
+        <div class="tech-card-icon" style="background: rgba(255,153,34,0.1);"><svg viewBox="0 0 24 24" stroke="var(--accent-orange)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div><h4>Google Search Grounding</h4><p>Real-time web research via Gemini</p></div>
+      </div>
+      <div class="tech-card domo-animate">
+        <div class="tech-card-icon" style="background: rgba(119,108,176,0.1);"><svg viewBox="0 0 24 24" stroke="var(--accent-purple)"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+        <div><h4>Domo AppDB</h4><p>Persistent storage (20 collections)</p></div>
+      </div>
+      <div class="tech-card domo-animate">
+        <div class="tech-card-icon" style="background: rgba(173,212,193,0.15);"><svg viewBox="0 0 24 24" stroke="#6BAF8D"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div><h4>Knowledge Graph API</h4><p>Neo4j + Cloud Run for fact validation</p></div>
+      </div>
+      <div class="tech-card domo-animate">
+        <div class="tech-card-icon" style="background: rgba(153,204,238,0.12);"><svg viewBox="0 0 24 24" stroke="var(--domo-blue)"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
+        <div><h4>Google Cloud Run</h4><p>Container execution + scheduling</p></div>
+      </div>
+      <div class="tech-card domo-animate">
+        <div class="tech-card-icon" style="background: rgba(255,153,34,0.1);"><svg viewBox="0 0 24 24" stroke="var(--accent-orange)"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
+        <div><h4>Domo Code Engine</h4><p>Dataset queries + email delivery</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ CTA ════ -->
+<section id="cta" class="cta-section">
+  <div class="container domo-animate">
+    <h2>Ready to Chat With the Agent?</h2>
+    <p>Mention <strong>@Competitive Intel Agent</strong> in Gemini Enterprise to generate battle cards, comparisons, and deal prep in seconds.</p>
+    <a href="#" class="btn-primary" style="display: inline-flex;">Open Gemini Enterprise <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <div class="container">
+    <div class="footer-left">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><path fill="#FFF" d="M150.5,328.6c12.4,13.8,21.2,30.9,25,49.8,9.9-48.8,53-85.5,104.7-85.5s94.8,36.8,104.7,85.6v-85.6l106.8,106.8,107.1-106.8v85.6c9.9-48.8,53-85.6,104.7-85.6s79.2,24.8,96.4,60.7V0H0v292.9h70.8c31.7,0,60.1,13.8,79.7,35.7Z"/><path fill="#FFF" d="M703.6,506.6c-51.7,0-94.8-36.8-104.7-85.6v85.6h-36v-127.8l-71.1,71.4-71.4-71.4v127.8h-35.4v-85.6c-9.9,48.8-53,85.6-104.7,85.6s-94.8-36.7-104.7-85.5c-3.8,18.9-12.6,36-25,49.8-19.6,21.9-48,35.7-79.7,35.7H0v293.4h800v-354.2c-17.2,35.9-53.9,60.7-96.4,60.7h0Z"/><path fill="#FFF" d="M280.2,471c39.4,0,71.3-31.9,71.3-71.3s-31.9-71.3-71.3-71.3-71.3,31.9-71.3,71.3,31.9,71.3,71.3,71.3Z"/><path fill="#FFF" d="M142.1,399.7c0-37.8-29.4-68.7-66.6-71.1h-40.1v142.2h40.1c37.2-2.4,66.6-33.3,66.6-71.1h0Z"/><path fill="#FFF" d="M703.6,471c39.4,0,71.3-31.9,71.3-71.3s-31.9-71.3-71.3-71.3-71.3,31.9-71.3,71.3,31.9,71.3,71.3,71.3Z"/><path fill="#3F454D" d="M150.5,470.8c12.4-13.8,21.2-30.9,25-49.8,9.9,48.8,53,85.5,104.7,85.5s94.8-36.8,104.7-85.6v85.6h35.4v-127.8l71.4,71.4,71.1-71.4v127.8h36v-85.6c9.9,48.8,53,85.6,104.7,85.6s79.2-24.8,96.4-60.7v-92.2c-17.2-35.9-53.9-60.7-96.4-60.7s-94.8,36.8-104.7,85.6v-85.6l-107.1,106.8-106.8-106.8v85.6c-9.9-48.8-53-85.6-104.7-85.6s-94.8,36.7-104.7,85.5c-3.8-18.9-12.6-36-25-49.8-19.6-21.9-48-35.7-79.7-35.7H0v213.7h70.8c31.7,0,60.1-13.8,79.7-35.7h0ZM703.6,328.5c39.4,0,71.3,31.9,71.3,71.3s-31.9,71.3-71.3,71.3-71.3-31.9-71.3-71.3,31.9-71.3,71.3-71.3ZM280.2,328.5c39.4,0,71.3,31.9,71.3,71.3s-31.9,71.3-71.3,71.3-71.3-31.9-71.3-71.3,31.9-71.3,71.3-71.3ZM35.4,328.6h40.1c37.2,2.4,66.6,33.3,66.6,71.1s-29.4,68.7-66.6,71.1h-40.1v-142.2h0Z"/></svg>
+      <span>Competitive Intel Agent &middot; Built by Jake Heaps</span>
+    </div>
+    <div class="footer-right">
+      <span class="gemini-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+        Powered by Gemini AI
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.domo-animate').forEach(el => observer.observe(el));
+
+  // Animated numbers
+  function animateValue(el, start, end, duration, suffix) {
+    suffix = suffix || '';
+    const startTime = performance.now();
+    function update(t) {
+      const p = Math.min((t - startTime) / duration, 1);
+      el.textContent = Math.floor(start + (end - start) * (1 - Math.pow(2, -10 * p))).toLocaleString() + suffix;
+      if (p < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+  const numObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) { const el = entry.target; animateValue(el, 0, parseInt(el.dataset.value), 1500, el.dataset.suffix || ''); numObs.unobserve(el); } });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('[data-value]').forEach(el => numObs.observe(el));
+
+  // Nav scroll
+  window.addEventListener('scroll', () => { document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20); });
+
+  // Competitors
+  const competitors = [
+    { name: 'Tableau', pillars: ['visualization', 'embed'] },
+    { name: 'Power BI', pillars: ['visualization', 'embed'] },
+    { name: 'Looker Studio', pillars: ['visualization'] },
+    { name: 'Qlik', pillars: ['visualization', 'integration', 'embed'] },
+    { name: 'Sigma', pillars: ['visualization'] },
+    { name: 'ThoughtSpot', pillars: ['embed'] },
+    { name: 'Fivetran', pillars: ['integration'] },
+    { name: 'Airbyte', pillars: ['integration'] },
+    { name: 'dbt Cloud', pillars: ['integration'] },
+    { name: 'Matillion', pillars: ['integration'] },
+    { name: 'Informatica', pillars: ['integration'] },
+    { name: 'Alteryx', pillars: ['integration'] },
+    { name: 'Agentforce', pillars: ['agent'] },
+    { name: 'Power Automate', pillars: ['agent'] },
+    { name: 'Base44', pillars: ['apps'] },
+    { name: 'PowerApps', pillars: ['apps'] },
+    { name: 'Superblocks', pillars: ['apps'] },
+    { name: 'Reveal BI', pillars: ['embed'] },
+  ];
+  const pillarLabels = { visualization: 'Visualization', integration: 'Integration', agent: 'Agent Catalyst', apps: 'Apps', embed: 'Domo Embed' };
+  function renderCompetitors(filter) {
+    const grid = document.getElementById('competitorsGrid');
+    const filtered = filter === 'all' ? competitors : competitors.filter(c => c.pillars.includes(filter));
+    grid.innerHTML = filtered.map(c => '<div class="competitor-card domo-animate visible"><div class="comp-name">' + c.name + '</div><div class="comp-pillar">' + c.pillars.map(p => pillarLabels[p]).join(' · ') + '</div></div>').join('');
+  }
+  document.getElementById('pillarTabs').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('pillar-tab')) return;
+    document.querySelectorAll('.pillar-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    renderCompetitors(e.target.dataset.pillar);
+  });
+  renderCompetitors('all');
+
+  // Re-observe dynamically created elements
+  document.querySelectorAll('.domo-animate:not(.visible)').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
