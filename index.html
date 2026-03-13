@@ -388,7 +388,7 @@
     <div class="section-header domo-animate">
       <div class="section-label">How It Works</div>
       <h2>The Daily Intelligence Pipeline</h2>
-      <p>Every morning at 7 AM MST, a Cloud Run job kicks off the full competitive research cycle — from live web search to structured storage to stakeholder delivery.</p>
+      <p>Every morning at 7 AM MST, a Domo Code Engine function kicks off the full competitive research cycle — running natively inside Domo from live web search to structured storage to stakeholder delivery.</p>
     </div>
     <div class="pipeline">
       <div class="pipeline-step domo-animate">
@@ -651,10 +651,10 @@
     </div>
     <div class="arch-diagram domo-animate">
       <div class="arch-divider"><span>Trigger</span></div>
-      <div class="arch-row"><div class="arch-box ab-dark">Cloud Scheduler<small>0 14 * * * (UTC)</small></div></div>
+      <div class="arch-row"><div class="arch-box ab-dark">Domo Workflow<small>Timer: 7 AM MST Daily</small></div></div>
       <div class="arch-arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
       <div class="arch-divider"><span>Daily Collector</span></div>
-      <div class="arch-row"><div class="arch-box ab-blue">Cloud Run Job<small>Python 3.11</small></div></div>
+      <div class="arch-row"><div class="arch-box ab-blue">Domo Code Engine<small>Python (Native)</small></div></div>
       <div class="arch-arrow"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
       <div class="arch-row">
         <div class="arch-box ab-orange">Gemini 2.5 Flash<small>+ Google Search</small></div>
@@ -701,8 +701,8 @@
         <div><h4>Knowledge Graph API</h4><p>Neo4j + Cloud Run for fact validation</p></div>
       </div>
       <div class="tech-card domo-animate">
-        <div class="tech-card-icon" style="background: rgba(153,204,238,0.12);"><svg viewBox="0 0 24 24" stroke="var(--domo-blue)"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
-        <div><h4>Google Cloud Run</h4><p>Container execution + scheduling</p></div>
+        <div class="tech-card-icon" style="background: rgba(153,204,238,0.12);"><svg viewBox="0 0 24 24" stroke="var(--domo-blue)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div><h4>Domo Workflows</h4><p>Native scheduling + orchestration</p></div>
       </div>
       <div class="tech-card domo-animate">
         <div class="tech-card-icon" style="background: rgba(255,153,34,0.1);"><svg viewBox="0 0 24 24" stroke="var(--accent-orange)"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
