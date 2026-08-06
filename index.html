@@ -379,7 +379,7 @@
       <div class="stat-item domo-animate"><div class="stat-value" data-value="93">0</div><div class="stat-label">Daily Search Queries</div></div>
       <div class="stat-item domo-animate"><div class="stat-value" data-value="24">0</div><div class="stat-label">Agent Tools</div></div>
     </div>
-    <p style="text-align:center;margin-top:1.25rem;font-size:.75rem;color:#68737F;">Stored-fact and collection counts verified against the Domo AppDB collections on 6 August 2026. Daily query volume is 18 competitors &times; 3 searches, plus 9 misconception queries and 30 M&amp;A queries.</p>
+    <p style="text-align:center;margin-top:1.25rem;font-size:.75rem;color:#68737F;">Stored-fact and collection counts verified against the Domo AppDB collections on 6 August 2026: 1,811 findings across the 18 competitor collections, plus 273 misconceptions and 10 M&amp;A signals. Daily query volume is 18 competitors &times; 3 searches, plus 9 misconception queries and 30 M&amp;A queries.</p>
   </div>
 </section>
 
@@ -771,7 +771,7 @@
     { name: 'Looker Studio', pillars: ['visualization'], facts: 100 },
     { name: 'Qlik', pillars: ['visualization', 'integration', 'embed'], facts: 100 },
     { name: 'Sigma', pillars: ['visualization'], facts: 100 },
-    { name: 'ThoughtSpot', pillars: ['embed'], facts: 89 },
+    { name: 'ThoughtSpot', pillars: ['embed'], facts: 111 },
     { name: 'Fivetran', pillars: ['integration'], facts: 100 },
     { name: 'Airbyte', pillars: ['integration'], facts: 100 },
     { name: 'dbt Cloud', pillars: ['integration'], facts: 100 },
@@ -793,7 +793,7 @@
     grid.innerHTML = filtered.map(c => '<div class="competitor-card domo-animate visible"><div class="comp-name">' + c.name + '</div><div class="comp-pillar">' + c.pillars.map(p => pillarLabels[p]).join(' · ') + '</div><div class="comp-facts"><span class="facts-dot"></span>' + c.facts + ' facts</div></div>').join('');
     // Update summary below grid
     var summaryEl = document.getElementById('competitorsSummary');
-    if (summaryEl) summaryEl.innerHTML = '<span class="ct-num">' + totalFacts.toLocaleString() + '</span><div class="ct-label">verified facts' + (filter === 'all' ? ' across all competitors' : ' in ' + pillarLabels[filter]) + '<small>+ 112 misconceptions &middot; 90 M&A signals</small></div>';
+    if (summaryEl) summaryEl.innerHTML = '<span class="ct-num">' + totalFacts.toLocaleString() + '</span><div class="ct-label">verified facts' + (filter === 'all' ? ' across all competitors' : ' in ' + pillarLabels[filter]) + '<small>+ 273 misconceptions &middot; 10 M&A signals</small></div>';
   }
   document.getElementById('pillarTabs').addEventListener('click', (e) => {
     if (!e.target.classList.contains('pillar-tab')) return;
